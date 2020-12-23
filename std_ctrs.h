@@ -23,24 +23,24 @@ extern "C" {
 /** assignment (so that the compilation doesn`t fail on constant fields) **/
 #define  CTR_ASSIGN(d, ...) _CTR_ASSIGN(d, ##__VA_ARGS__, 1, 0)
 #define _CTR_ASSIGN(d, s, n, ...) _CTR_ASSIGN##n(d, s)
-#define _CTR_ASSIGN0(d, s) do {                    \
-    auto __d = &(d);                               \
-    decltype(d) __s = {};                          \
-    _Pragma("pack(push, 1)")                       \
-    struct S {                                     \
-        unsigned char _[sizeof(d)];                \
-    } *_d = (struct S*)__d, *_s = (struct S*)&__s; \
-    _Pragma("pack(pop)")                           \
-    *_d = *_s;                                     \
+#define _CTR_ASSIGN0(d, s) do {                        \
+    auto ___d = &(d);                                  \
+    decltype(d) ___s = {};                             \
+    _Pragma("pack(push, 1)")                           \
+    struct S {                                         \
+        unsigned char _[sizeof(d)];                    \
+    } *__d = (struct S*)___d, *__s = (struct S*)&___s; \
+    _Pragma("pack(pop)")                               \
+    *__d = *__s;                                       \
 } while (0)
-#define _CTR_ASSIGN1(d, s) do {                    \
-    auto __d = &(d);                               \
-    _Pragma("pack(push, 1)")                       \
-    struct S {                                     \
-        unsigned char _[sizeof(d)];                \
-    } *_d = (struct S*)__d, *_s = (struct S*)&(s); \
-    _Pragma("pack(pop)")                           \
-    *_d = *_s;                                     \
+#define _CTR_ASSIGN1(d, s) do {                        \
+    auto ___d = &(d);                                  \
+    _Pragma("pack(push, 1)")                           \
+    struct S {                                         \
+        unsigned char _[sizeof(d)];                    \
+    } *__d = (struct S*)___d, *__s = (struct S*)&(s);  \
+    _Pragma("pack(pop)")                               \
+    *__d = *__s;                                       \
 } while (0)
 
 /** get capacity of the vector **/
@@ -85,12 +85,14 @@ unsigned _CTR_V_CGET(void *v) {
             _n = 2 * _n + ((2 * _n < _s) &&                                 \
                            (comp(_d + 2 * _n + 1, _d + 2 * _n) > 0));       \
         for (; (_n != _p) && (comp(_d + _p, _d + _n) > 0); _c--, _n >>= 1); \
-        for (_t = _d[_p]; _c > 0; _c--, _d[_n >> (_c + 1)] = _d[_n >> _c]); \
-        _d[_n] = _t;                                                        \
+        CTR_ASSIGN(_t, _d[_p]);                                             \
+        for (; _c > 0; _c--)                                                \
+            CTR_ASSIGN(_d[_n >> _c], _d[_n >> (_c - 1)]);                   \
+        CTR_ASSIGN(_d[_n], _t);                                             \
         if (_p == 1) {                                                      \
-            _t = _d[_p];                                                    \
-            _d[_p] = _d[_s];                                                \
-            _d[_s] = _t;                                                    \
+            CTR_ASSIGN(_t, _d[_p]);                                         \
+            CTR_ASSIGN(_d[_p], _d[_s]);                                     \
+            CTR_ASSIGN(_d[_s], _t);                                         \
         }                                                                   \
     }                                                                       \
 } while (0)
