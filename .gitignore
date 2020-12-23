@@ -1,0 +1,4 @@
+# Ignore everything except the main header and its readme
+*
+!std_ctrs.h
+!README.md
