@@ -45,7 +45,7 @@ extern "C" {
 
 /** get capacity of the vector **/
 #define  CTR_V_CGET(v) _CTR_V_CGET(&(v))
-unsigned _CTR_V_CGET(void *v) {
+static unsigned _CTR_V_CGET(void *v) {
     _CTR_B(unsigned) *_v;
     *(void**)&_v = v;
     return (_v->mult) ? ((_v->size + _v->mult - 1) / _v->mult) * _v->mult : 0;
