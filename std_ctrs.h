@@ -74,10 +74,20 @@ unsigned _CTR_V_CGET(void *v) {
     _v->_[_v->size - 1] = (e);          \
 } while (0)
 
-/** heapsort **/
+/** filter and truncate the vector **/
+#define CTR_V_FLTR(v, comp) do {                  \
+    auto _v = &(v);                               \
+    unsigned _d = 0;                              \
+    for (unsigned _c = 0; _c < _v->size; _c++)    \
+        if (comp((_v->_ + _c)) && (_d++ != _c))   \
+            CTR_ASSIGN(_v->_[_d - 1], _v->_[_c]); \
+    CTR_V_MGET(*_v, _d, 1);                       \
+} while (0)
+
+/** sort the vector using heapsort **/
 #define CTR_V_SORT(v, comp) do {                                            \
     auto _v = &(v);                                                         \
-    decltype(_v->_) _d = _v->_ - 1;                                         \
+    auto _d = _v->_ - 1;                                                    \
     decltype(*_v->_) _t;                                                    \
     for (unsigned _n, _c, _s = _v->size, _p = _s >> 1; _s > 1;              \
         (_p > 1) ? _p-- : _s--) {                                           \
