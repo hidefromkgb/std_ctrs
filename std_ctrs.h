@@ -44,12 +44,8 @@ extern "C" {
 } while (0)
 
 /** get capacity of the vector **/
-#define  CTR_V_CGET(v) _CTR_V_CGET(&(v))
-static unsigned _CTR_V_CGET(void *v) {
-    _CTR_B(unsigned) *_v;
-    *(void**)&_v = v;
-    return (_v->mult) ? ((_v->size + _v->mult - 1) / _v->mult) * _v->mult : 0;
-}
+#define CTR_V_CGET(_v) ({ auto v = &(_v); \
+    (v->mult) ? ((v->size + v->mult - 1) / v->mult) * v->mult : 0; })
 
 /** get or release memory for the vector **/
 #define  CTR_V_MGET(v, ...) _CTR_V_MGET(v, ##__VA_ARGS__, 0, 0)
@@ -84,13 +80,31 @@ static unsigned _CTR_V_CGET(void *v) {
     CTR_V_MGET(*_v, _d, 1);                       \
 } while (0)
 
+/** find a pattern in the vector **/
+#define CTR_V_FIND(v, comp, b, e) ({                            \
+    auto _v = &(v);                                             \
+    unsigned _r = 0, _b = (b), _e = (e);                        \
+    _b = ((_v->size < _b) && (_b != -1)) ? _v->size : _b;       \
+    _e = ((_v->size < _e) && (_e != -1)) ? _v->size : _e;       \
+    unsigned _p = (_b < _e) ? 1 : -1, _s = (_b > _e) ? _b : _e; \
+    for (unsigned _c = (_b < _e) ? _b : _e; _c != _s; _c += _p) \
+        if (comp((_v->_ + _c))) {                               \
+            _r = _c + 1;                                        \
+            break;                                              \
+        }                                                       \
+    _r;                                                         \
+})
+
 /** sort the vector using heapsort **/
-#define CTR_V_SORT(v, comp) do {                                            \
+#define CTR_V_SORT(v, comp, b, e) do {                                      \
     auto _v = &(v);                                                         \
-    auto _d = _v->_ - 1;                                                    \
+    unsigned _b = (b), _e = (e);                                            \
+    _b = (_v->size < _b) ? _v->size : _b;                                   \
+    _e = (_v->size < _e) ? _v->size : _e;                                   \
+    auto _d = _v->_ + ((_b < _e) ? _b : _e) - 1;                            \
     decltype(*_v->_) _t;                                                    \
-    for (unsigned _n, _c, _s = _v->size, _p = _s >> 1; _s > 1;              \
-        (_p > 1) ? _p-- : _s--) {                                           \
+    for (unsigned _n, _c, _s = (_b < _e) ? (_e - _b) : (_b - _e),           \
+         _p = _s >> 1; _s > 1; (_p > 1) ? _p-- : _s--) {                    \
         for (_c = 0, _n = _p; _n <= _s >> 1; _c++)                          \
             _n = 2 * _n + ((2 * _n < _s) &&                                 \
                            (comp(_d + 2 * _n + 1, _d + 2 * _n) > 0));       \
