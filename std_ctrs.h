@@ -23,25 +23,28 @@ extern "C" {
 /** assignment (so that the compilation doesn`t fail on constant fields) **/
 #define  CTR_ASSIGN(d, ...) _CTR_ASSIGN(d, ##__VA_ARGS__, 1, 0)
 #define _CTR_ASSIGN(d, s, n, ...) _CTR_ASSIGN##n(d, s)
-#define _CTR_ASSIGN0(d, s) do {                        \
-    auto ___d = &(d);                                  \
-    decltype(d) ___s = {};                             \
-    _Pragma("pack(push, 1)")                           \
-    struct S {                                         \
-        unsigned char _[sizeof(d)];                    \
-    } *__d = (struct S*)___d, *__s = (struct S*)&___s; \
-    _Pragma("pack(pop)")                               \
-    *__d = *__s;                                       \
+#define _CTR_ASSIGN0(d, s) do {            \
+    auto ___d = &(d);                      \
+    _Pragma("pack(push, 1)")               \
+    struct S { unsigned char _[sizeof(d)]; \
+    } *__d = (struct S*)___d;              \
+    _Pragma("pack(pop)")                   \
+    *__d = (struct S){};                   \
 } while (0)
-#define _CTR_ASSIGN1(d, s) do {                        \
-    auto ___d = &(d);                                  \
-    _Pragma("pack(push, 1)")                           \
-    struct S {                                         \
-        unsigned char _[sizeof(d)];                    \
-    } *__d = (struct S*)___d, *__s = (struct S*)&(s);  \
-    _Pragma("pack(pop)")                               \
-    *__d = *__s;                                       \
+#define _CTR_ASSIGN1(d, s) do {            \
+    auto ___d = &(d);                      \
+    _Pragma("pack(push, 1)")               \
+    struct S { unsigned char _[sizeof(d)]; \
+    } *__d = (struct S*)___d,              \
+      *__s = (struct S*)&(s);              \
+    _Pragma("pack(pop)")                   \
+    *__d = *__s;                           \
 } while (0)
+
+/** fill vector with zeroes **/
+#define CTR_V_ZERO(_v) do { auto v = &(_v);   \
+    for (unsigned _c = 0; _c < v->size; _c++) \
+        CTR_ASSIGN(v->_[_c]); } while (0)
 
 /** get capacity of the vector **/
 #define CTR_V_CGET(_v) ({ auto v = &(_v); \
